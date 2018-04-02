@@ -100,7 +100,7 @@ class ViewController: UIViewController {
         let z = translation.z
         
         // 火箭
-        guard let rocketshipScene = SCNScene(named: "rocketship.scn"),
+        guard let rocketshipScene = SCNScene(named: "art.scnassets/rocketship.scn"),
             let rocketshipNode = rocketshipScene.rootNode.childNode(withName: "rocketship", recursively: false) else {
             return
         }
@@ -153,7 +153,7 @@ class ViewController: UIViewController {
         let swipeLocation = recognizer.location(in: sceneView)
         guard let rocketShipNode = getRocketShipNode(from: swipeLocation),
         let physicsBody = rocketShipNode.physicsBody,
-        let reactorParticalSystem = SCNParticleSystem(named: "reactor", inDirectory: nil),
+        let reactorParticalSystem = SCNParticleSystem(named: "art.scnassets/reactor", inDirectory: nil),
         let engineNode = rocketShipNode.childNode(withName: "node2", recursively: false) else {
             return
         }
@@ -196,16 +196,59 @@ extension ViewController: ARSessionObserver {
 // MARK: - ARSCNViewDelegate
 
 extension ViewController: ARSCNViewDelegate {
-    /*
-     // Override to create and configure nodes for anchors added to the view's session.
-     func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
-     let node = SCNNode()
-     
-     return node
-     }
-     */
+
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        guard let planeAnchor = anchor as? ARPlaneAnchor else {
+            return
+        }
+        // 创建平面
+        let width = CGFloat(planeAnchor.extent.x)
+        let height = CGFloat(planeAnchor.extent.z)
+        let plane = SCNPlane(width: width, height: height)
+        plane.materials.first?.diffuse.contents = UIColor.transparentWhite
+        var planeNode = SCNNode(geometry: plane)
         
+        planeNode.position = SCNVector3Make(planeAnchor.center.x, planeAnchor.center.y, planeAnchor.center.z)
+        planeNode.eulerAngles.x = -.pi / 2
+        // 更新平面刚体
+        update(&planeNode, withGeometry: plane, type: .static)
+        
+        node.addChildNode(planeNode)
+        
+        planeNodes.append(planeNode)
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
+        guard anchor is ARPlaneAnchor, let planeNode = node.childNodes.first  else {
+            return
+        }
+        
+        planeNodes = planeNodes.filter({ (node) -> Bool in
+            node != planeNode
+        })
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        guard let planeAnchor = anchor as? ARPlaneAnchor,
+        var planeNode = node.childNodes.first,
+        let plane = planeNode.geometry as? SCNPlane else {
+            return
+        }
+        
+        let width = CGFloat(planeAnchor.extent.x)
+        let height = CGFloat(planeAnchor.extent.z)
+        plane.width = width
+        plane.height = height
+        
+        planeNode.position = SCNVector3Make(planeAnchor.center.x, planeAnchor.center.y, planeAnchor.center.z)
+        update(&planeNode, withGeometry: plane, type: .static)
+    }
+    
+    // 更新平面节点的物理刚体
+    func update(_ node: inout SCNNode, withGeometry geometry: SCNGeometry, type: SCNPhysicsBodyType)  {
+        let shape = SCNPhysicsShape(geometry: geometry, options: nil)
+        let physicsBody = SCNPhysicsBody(type: type, shape: shape)
+        node.physicsBody = physicsBody
     }
 }
 
@@ -218,6 +261,6 @@ extension float4x4 {
 
 extension UIColor {
     open class var transparentWhite: UIColor {
-        return UIColor.white.withAlphaComponent(0.2)
+        return UIColor.white.withAlphaComponent(0.5)
     }
 }
