@@ -158,7 +158,7 @@ class ViewController: UIViewController {
             return
         }
         
-        physicsBody.isAffectedByGravity = true
+        physicsBody.isAffectedByGravity = false
         // 设置摩擦力
         physicsBody.damping = 0
         // 碰撞的节点数组
@@ -166,7 +166,7 @@ class ViewController: UIViewController {
         engineNode.addParticleSystem(reactorParticalSystem)
         
         // 添加上升动作
-        let action = SCNAction.moveBy(x: 0, y: 0.1, z: 0, duration: 3)
+        let action = SCNAction.moveBy(x: 0, y: 0.3, z: 0, duration: 3)
         action.timingMode = .easeInEaseOut
         rocketShipNode.runAction(action)
         
