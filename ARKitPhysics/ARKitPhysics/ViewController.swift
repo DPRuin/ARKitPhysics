@@ -142,6 +142,7 @@ class ViewController: UIViewController {
         let direction = SCNVector3Make(0, 3, 0)
         physicsBody.applyForce(direction, asImpulse: true)
         
+        
     }
     
     /// 发射火箭
